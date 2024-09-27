@@ -1,0 +1,143 @@
+// src/App.js
+import React, { useState } from "react";
+import axios from "axios";
+
+function App() {
+  const [user, setUser] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+
+  const [proposal, setProposal] = useState({
+    title: "",
+    executive_summary: "",
+    budget: "",
+    impact: "",
+  });
+
+  const [suggestions, setSuggestions] = useState("");
+
+  // Handle user input
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUser({ ...user, [name]: value });
+  };
+
+  const handleProposalChange = (e) => {
+    const { name, value } = e.target;
+    setProposal({ ...proposal, [name]: value });
+  };
+
+  // Register User
+  const registerUser = async () => {
+    try {
+      const response = await axios.post("http://localhost:8000/register", user);
+      alert(response.data.message);
+    } catch (error) {
+      alert(error.response.data.detail);
+    }
+  };
+
+  // Create Proposal
+  const createProposal = async () => {
+    try {
+      const response = await axios.post("http://localhost:8000/proposals/create", {
+        ...proposal,
+        id: "",
+        status: "draft",
+      });
+      alert(`Proposal created with ID: ${response.data.id}`);
+    } catch (error) {
+      alert("Error creating proposal");
+    }
+  };
+
+  // Get GPT-4 Suggestions for a specific section
+  const getSuggestions = async (section, content) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8000/proposals/suggestions`,
+        {
+          section: section,
+          content: content,
+        }
+      );
+      setSuggestions(response.data.suggestions);
+    } catch (error) {
+      alert("Error getting suggestions");
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>GrantGenius</h1>
+
+      {/* User Registration Form */}
+      <div>
+        <h2>Register User</h2>
+        <input
+          type="text"
+          name="username"
+          placeholder="Username"
+          onChange={handleInputChange}
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          onChange={handleInputChange}
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          onChange={handleInputChange}
+        />
+        <button onClick={registerUser}>Register</button>
+      </div>
+
+      {/* Proposal Creation Form */}
+      <div>
+        <h2>Create Grant Proposal</h2>
+        <input
+          type="text"
+          name="title"
+          placeholder="Proposal Title"
+          onChange={handleProposalChange}
+        />
+        <textarea
+          name="executive_summary"
+          placeholder="Executive Summary"
+          onChange={handleProposalChange}
+        />
+        <textarea
+          name="budget"
+          placeholder="Budget"
+          onChange={handleProposalChange}
+        />
+        <textarea
+          name="impact"
+          placeholder="Impact"
+          onChange={handleProposalChange}
+        />
+        <button onClick={createProposal}>Create Proposal</button>
+      </div>
+
+      {/* Get Suggestions for Executive Summary */}
+      <div>
+        <h2>Get Suggestions</h2>
+        <button
+          onClick={() =>
+            getSuggestions("executive_summary", proposal.executive_summary)
+          }
+        >
+          Get Suggestions for Executive Summary
+        </button>
+        <p>{suggestions}</p>
+      </div>
+    </div>
+  );
+}
+
+export default App;
